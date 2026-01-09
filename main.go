@@ -51,19 +51,17 @@ func realMain() error {
 	// NOTE: 新しいエンドポイントの登録はrouter.NewRouterの内部で行うようにする
 	mux := router.NewRouter(todoDB)
 
-	log.Println("START")
 	// サーバーをlistenする
 	err = runServer(port, mux)
 	if err != nil {
-		log.Println("ERR")
 		return err
 	}
-	log.Println("END")
 
 	return nil
 }
 
 func runServer(port string, mux *http.ServeMux) error {
+
 	server := &http.Server{
 		Addr:    port,
 		Handler: mux,
