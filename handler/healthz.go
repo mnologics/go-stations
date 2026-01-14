@@ -18,6 +18,6 @@ func NewHealthzHandler() *HealthzHandler {
 func (h *HealthzHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_ = &model.HealthzResponse{}
 	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message":"ok"}`))
+	w.Write([]byte(`{"message":"200 OK"}`))
 	w.WriteHeader(http.StatusOK)
 }
