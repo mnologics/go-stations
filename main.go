@@ -70,6 +70,7 @@ func runServer(port string, mux *http.ServeMux) error {
 	log.Println("Starting server on port", port)
 	err := server.ListenAndServe()
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
