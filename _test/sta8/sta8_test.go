@@ -3,6 +3,7 @@ package sta8_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -61,6 +62,7 @@ func TestStation8(t *testing.T) {
 
 			svc := service.NewTODOService(d)
 			got, err := svc.CreateTODO(context.Background(), tc.Subject, tc.Description)
+			fmt.Println(got, err)
 			if err != nil {
 				if !errors.As(err, &sqlite3Err) {
 					t.Errorf("期待していないエラーの Type です, got = %t, want = %+v", err, sqlite3Err)
