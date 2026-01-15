@@ -51,7 +51,7 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 	wg.Wait()
 }
 
-func main() {
+func init() { // init function to avoid "no main function" error
 	Crawl("https://golang.org/", 4, fetcher)
 }
 

@@ -30,7 +30,7 @@ func Same(t1, t2 *tree.Tree) bool {
 	return true
 }
 
-func main() {
+func init() { // init function to avoid "no main function" error
 	// Example usage:
 	t1 := tree.New(1)
 	t2 := tree.New(1)
