@@ -19,7 +19,7 @@ func NewRouter(todoDB *sql.DB) *http.ServeMux {
 	// TODO エンドポイントの登録
 	todoService := service.NewTODOService(todoDB)
 	todoHandler := handler.NewTODOHandler(todoService)
-	mux.Handle("/todos/", todoHandler)
+	mux.Handle("/todos", todoHandler)
 
 	return mux
 }

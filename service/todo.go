@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/TechBowl-japan/go-stations/model"
@@ -26,7 +27,7 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 		insert  = `INSERT INTO todos(subject, description) VALUES(?, ?)`
 		confirm = `SELECT subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
-
+	//log.Println("CreateTODO", subject, description)
 	result, err := s.db.ExecContext(ctx, insert, subject, description)
 	if err != nil {
 		return nil, err
@@ -36,7 +37,7 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 		return nil, err
 	}
 	s.db.QueryRowContext(ctx, confirm, id)
-
+	//log.Println(s.db)
 	return &model.TODO{
 		ID:          int(id),
 		Subject:     subject,
@@ -52,18 +53,28 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id DESC LIMIT ?`
 		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id DESC LIMIT ?`
 	)
-
-	s.db.QueryContext(ctx, read, size)
-	s.db.QueryContext(ctx, readWithID, prevID, size)
-	result, err := s.db.ExecContext(ctx, readWithID, prevID, size)
+	log.Println("ReadTODO", prevID, size)
+	rows, err := s.db.QueryContext(ctx, read, size)
 	if err != nil {
 		return nil, err
 	}
-	_ = result
 
-	return []*model.TODO{
-		{ID: 1, Subject: "sample subject", Description: "sample description", CreatedAt: time.Now(), UpdatedAt: time.Now()},
-	}, nil
+	rows, err = s.db.QueryContext(ctx, readWithID, prevID, size)
+	if err != nil {
+		return nil, err
+	}
+	log.Println("rows", rows)
+	var todos []*model.TODO
+	for rows.Next() {
+		var todo model.TODO
+		err := rows.Scan(&todo.ID, &todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		log.Println("todo", todo)
+		todos = append(todos, &todo)
+	}
+	return todos, nil
 }
 
 // UpdateTODO updates the TODO on DB.

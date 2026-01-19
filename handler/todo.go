@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/TechBowl-japan/go-stations/model"
@@ -17,15 +18,16 @@ type TODOHandler struct {
 // ServeHTTP implements [http.Handler].
 func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	switch r.URL.Path {
-	case "/todos/create":
+	// log.Println(r)
+	switch r.Method {
+	case "POST":
 		var req model.CreateTODORequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if req.Subject == "" || req.Description == "" {
+		// log.Println("req", req)
+		if req.Subject == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -36,15 +38,25 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
-
-	case "/todos/read":
-		h.Read(r.Context(), nil)
-	case "/todos/update":
-		h.Update(r.Context(), nil)
-	case "/todos/delete":
-		h.Delete(r.Context(), nil)
+	case "GET":
+		var req model.ReadTODORequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		log.Println("req", req)
+		resp, err := h.Read(r.Context(), &req)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
+	case "PUT":
+		log.Println(r, "FIXME")
+	case "DELETE":
+		log.Println(r, "FIXME")
 	default:
-		http.NotFound(w, r)
 		w.WriteHeader(http.StatusNotFound)
 	}
 }
