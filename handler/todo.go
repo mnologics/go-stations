@@ -44,7 +44,7 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		log.Println("req", req)
+		// log.Println("req", req)
 		resp, err := h.Read(r.Context(), &req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

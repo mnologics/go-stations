@@ -49,8 +49,8 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 // ReadTODO reads TODOs on DB.
 func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*model.TODO, error) {
 	const (
-		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id DESC LIMIT ?`
-		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id DESC LIMIT ?`
+		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id ASC LIMIT ?`
+		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id ASC LIMIT ?`
 	)
 	// log.Println("ReadTODO", prevID, size)
 	rows, err := s.db.QueryContext(ctx, readWithID, prevID, size)
