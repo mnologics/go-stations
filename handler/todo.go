@@ -53,7 +53,23 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
 	case "PUT":
-		log.Println(r, "FIXME")
+		var req model.UpdateTODORequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		// log.Println("req", req)
+		if req.ID == 0 || req.Subject == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		resp, err := h.Update(r.Context(), &req)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 	case "DELETE":
 		log.Println(r, "FIXME")
 	default:

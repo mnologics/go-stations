@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"github.com/TechBowl-japan/go-stations/model"
 )
@@ -24,7 +23,7 @@ func NewTODOService(db *sql.DB) *TODOService {
 func (s *TODOService) CreateTODO(ctx context.Context, subject, description string) (*model.TODO, error) {
 	const (
 		insert  = `INSERT INTO todos(subject, description) VALUES(?, ?)`
-		confirm = `SELECT subject, description, created_at, updated_at FROM todos WHERE id = ?`
+		confirm = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
 	// log.Println("CreateTODO", subject, description)
 	result, err := s.db.ExecContext(ctx, insert, subject, description)
@@ -35,15 +34,14 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 	if err != nil {
 		return nil, err
 	}
-	s.db.QueryRowContext(ctx, confirm, id)
-	// log.Println(s.db)
-	return &model.TODO{
-		ID:          int(id),
-		Subject:     subject,
-		Description: description,
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}, nil
+
+	var todo model.TODO
+	err = s.db.QueryRowContext(ctx, confirm, id).Scan(&todo.ID, &todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	// log.Println("todo", todo)
+	return &todo, nil
 }
 
 // ReadTODO reads TODOs on DB.
@@ -80,29 +78,23 @@ func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*mode
 func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, description string) (*model.TODO, error) {
 	const (
 		update  = `UPDATE todos SET subject = ?, description = ? WHERE id = ?`
-		confirm = `SELECT subject, description, created_at, updated_at FROM todos WHERE id = ?`
+		confirm = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
+	// log.Println("UpdateTODO", id, subject, description)
 	result, err := s.db.ExecContext(ctx, update, subject, description, id)
 	if err != nil {
 		return nil, err
 	}
 	_ = result
+	// log.Println("result", result)
 
-	rows, err := s.db.QueryContext(ctx, confirm, id)
+	var todo model.TODO
+	err = s.db.QueryRowContext(ctx, confirm, id).Scan(&todo.ID, &todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
-
-	var createdAt time.Time
-	var updatedAt time.Time
-	rows.Scan(&id, &subject, &description, &createdAt, &updatedAt)
-	return &model.TODO{
-		ID:          int(id),
-		Subject:     subject,
-		Description: description,
-		CreatedAt:   createdAt,
-		UpdatedAt:   updatedAt,
-	}, nil
+	// log.Println("todo", todo)
+	return &todo, nil
 }
 
 // DeleteTODO deletes TODOs on DB by ids.
