@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -65,6 +66,10 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		resp, err := h.Update(r.Context(), &req)
 		if err != nil {
+			if errors.Is(err, &model.ErrNotFound{}) {
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -123,7 +128,7 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 
 // Delete handles the endpoint that deletes the TODOs.
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
-	ids := make([]int, len(req.IDs))
+	ids := make([]int64, len(req.IDs))
 	copy(ids, req.IDs)
 	err := h.svc.DeleteTODO(ctx, ids)
 	if err != nil {
