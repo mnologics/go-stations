@@ -81,9 +81,12 @@ func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, descrip
 		confirm = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id = ?`
 	)
 	// log.Println("UpdateTODO", id, subject, description)
+	// log.Printf("id=%d, subject=%s, description=%s", id, subject, description)
+	// log.Printf("UPDATE todos SET subject = %s, description = %s WHERE id = %d", subject, description, id)
 	result, err := s.db.ExecContext(ctx, update, subject, description, id)
 	if err != nil {
-		return nil, err
+		// log.Println("err:", err)
+		return nil, err // subjectが空文字の場合に対応するため (ステーション12)
 	}
 	_ = result
 	// log.Println("result", result)
@@ -91,7 +94,8 @@ func (s *TODOService) UpdateTODO(ctx context.Context, id int64, subject, descrip
 	var todo model.TODO
 	err = s.db.QueryRowContext(ctx, confirm, id).Scan(&todo.ID, &todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt)
 	if err != nil {
-		return nil, err
+		// log.Println("err:", err)
+		return nil, &model.ErrNotFound{} // idに対応するTODOが存在しない場合に対応するため (ステーション12)
 	}
 	// log.Println("todo", todo)
 	return &todo, nil

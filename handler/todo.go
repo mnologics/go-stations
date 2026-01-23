@@ -97,7 +97,7 @@ func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) 
 
 // Read handles the endpoint that reads the TODOs.
 func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*model.ReadTODOResponse, error) {
-	todos, err := h.svc.ReadTODO(ctx, int64(req.PrevID), int64(req.Size))
+	todos, err := h.svc.ReadTODO(ctx, req.PrevID, req.Size)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*mo
 
 // Update handles the endpoint that updates the TODO.
 func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) (*model.UpdateTODOResponse, error) {
-	todo, err := h.svc.UpdateTODO(ctx, int64(req.ID), req.Subject, req.Description)
+	todo, err := h.svc.UpdateTODO(ctx, req.ID, req.Subject, req.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -123,10 +123,8 @@ func (h *TODOHandler) Update(ctx context.Context, req *model.UpdateTODORequest) 
 
 // Delete handles the endpoint that deletes the TODOs.
 func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) (*model.DeleteTODOResponse, error) {
-	ids := make([]int64, len(req.IDs))
-	for i, id := range req.IDs {
-		ids[i] = int64(id)
-	}
+	ids := make([]int, len(req.IDs))
+	copy(ids, req.IDs)
 	err := h.svc.DeleteTODO(ctx, ids)
 	if err != nil {
 		return nil, err
