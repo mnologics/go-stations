@@ -47,18 +47,32 @@ func (s *TODOService) CreateTODO(ctx context.Context, subject, description strin
 // ReadTODO reads TODOs on DB.
 func (s *TODOService) ReadTODO(ctx context.Context, prevID, size int64) ([]*model.TODO, error) {
 	const (
-		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id ASC LIMIT ?`
-		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id ASC LIMIT ?`
+		read       = `SELECT id, subject, description, created_at, updated_at FROM todos ORDER BY id DESC LIMIT ?`
+		readWithID = `SELECT id, subject, description, created_at, updated_at FROM todos WHERE id < ? ORDER BY id DESC LIMIT ?`
 	)
-	// log.Println("ReadTODO", prevID, size)
-	rows, err := s.db.QueryContext(ctx, readWithID, prevID, size)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	// log.Println("rows", rows)
 
-	var todos []*model.TODO
+	// log.Println("ReadTODO ", prevID, size)
+	var rows *sql.Rows
+	var err error
+	if prevID < 1 {
+		// log.Println("ReadTODO:", size)
+		rows, err = s.db.QueryContext(ctx, read, size)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		// log.Println("rows", rows)
+	} else {
+		// log.Println("ReadTODO;", prevID, size)
+		rows, err = s.db.QueryContext(ctx, readWithID, prevID, size)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		// log.Println("rows", rows)
+	}
+
+	var todos []*model.TODO = make([]*model.TODO, 0) // length 0のスライスを作成
 	for rows.Next() {
 		var todo model.TODO
 		if err := rows.Scan(&todo.ID, &todo.Subject, &todo.Description, &todo.CreatedAt, &todo.UpdatedAt); err != nil {
