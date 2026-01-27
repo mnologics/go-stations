@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -19,7 +20,7 @@ type TODOHandler struct {
 // ServeHTTP implements [http.Handler].
 func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	// log.Println(r)
+	// log.Println("TODOHandler ServeHTTP called")
 	switch r.Method {
 	case "POST":
 		var req model.CreateTODORequest
@@ -41,11 +42,38 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 	case "GET":
 		var req model.ReadTODORequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		// Set default size
+		if req.Size == 0 {
+			req.Size = 5
+		}
+
+		if err := r.ParseForm(); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		if prevIDs, ok := r.Form["prev_id"]; ok && len(prevIDs) > 0 {
+			// log.Println("prev_id:", prevIDs[0])
+			var prevID int64
+			if _, err := fmt.Sscanf(prevIDs[0], "%d", &prevID); err == nil {
+				req.PrevID = prevID
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
+		if sizes, ok := r.Form["size"]; ok && len(sizes) > 0 {
+			log.Println("size:", sizes[0])
+			var size int64
+			if _, err := fmt.Sscanf(sizes[0], "%d", &size); err == nil {
+				req.Size = size
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			log.Println("req.Size", req.Size)
+		}
 		// log.Println("req", req)
+		// log.Println("ReadTODO handler called with PrevID:", req.PrevID, "Size:", req.Size)
 		resp, err := h.Read(r.Context(), &req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -102,14 +130,18 @@ func (h *TODOHandler) Create(ctx context.Context, req *model.CreateTODORequest) 
 
 // Read handles the endpoint that reads the TODOs.
 func (h *TODOHandler) Read(ctx context.Context, req *model.ReadTODORequest) (*model.ReadTODOResponse, error) {
+	// log.Println("Read handler:", req)
 	todos, err := h.svc.ReadTODO(ctx, req.PrevID, req.Size)
 	if err != nil {
+		// log.Println("Read error:", err)
 		return nil, err
 	}
 	result := make([]model.TODO, len(todos))
 	for i, todo := range todos {
+		// log.Println("todo:", todo)
 		result[i] = *todo
 	}
+	// log.Println("result:", result)
 	return &model.ReadTODOResponse{
 		TODOs: result,
 	}, nil
