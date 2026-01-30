@@ -104,7 +104,38 @@ func (h *TODOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(resp)
 	case "DELETE":
-		log.Println(r, "FIXME")
+		var req model.DeleteTODORequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		log.Println("req", req)
+		if len(req.IDs) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		resp, err := h.Delete(r.Context(), &req)
+		if err != nil {
+
+			// log.Println("Delete req IDs:", req.IDs)
+			// log.Println("Delete response:", resp)
+			// log.Println("Delete error:", err)
+			// log.Printf("err %%s: %s", err.Error())
+			// log.Printf("err %%v: %v", err)
+			// log.Printf("err %%w: %w", err)
+
+			var notFoundErr *model.ErrNotFound
+			if errors.As(err, &notFoundErr) {
+				log.Println("Returning 404 Not Found")
+				w.WriteHeader(http.StatusNotFound)
+				return
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resp)
 	default:
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -166,5 +197,6 @@ func (h *TODOHandler) Delete(ctx context.Context, req *model.DeleteTODORequest) 
 	if err != nil {
 		return nil, err
 	}
+
 	return &model.DeleteTODOResponse{}, nil
 }

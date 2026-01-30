@@ -22,6 +22,6 @@ func NewErrNotFound(message string) *ErrNotFound {
 	}
 }
 
-func (e *ErrNotFound) Error() string {
+func (e ErrNotFound) Error() string {
 	return e.Message
 }
